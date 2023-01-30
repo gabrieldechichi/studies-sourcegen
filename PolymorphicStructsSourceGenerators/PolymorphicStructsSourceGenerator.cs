@@ -66,7 +66,7 @@ namespace PolymorphicStructs
     {
         public void Initialize(GeneratorInitializationContext context)
         {
-            SourceGenUtils.AttachDebugger();
+            // SourceGenUtils.AttachDebugger();
             context.RegisterForSyntaxNotifications(() => new PolymorphicStructSyntaxReceiver());
         }
 
@@ -133,7 +133,7 @@ namespace PolymorphicStructs
                             }
                         }
                     }
-                    
+
                     //To Base struct
                     using (sourceWriter.WithNamedScope($"public {baseStructDef.Name} To{baseStructDef.Name}()"))
                     {
@@ -283,7 +283,41 @@ namespace PolymorphicStructs
                         {
                             using (sourceWriter.WithMethodScope(method))
                             {
-                                sourceWriter.WriteLine("throw new Exception();");
+                                using (sourceWriter.WithNamedScope(
+                                           $"switch ({PolymorphicStructsConstants.TypeEnumFieldName})"))
+                                {
+                                    foreach (var s in structs)
+                                    {
+                                        using (sourceWriter.WithNamedScope(
+                                                   $"case {PolymorphicStructsConstants.TypeEnumName}.{s.Name}:"))
+                                        {
+                                            var variableName = $"instance_{s.Name}";
+                                            sourceWriter.WriteLine($"var {variableName} = new {s.Name}(this);");
+
+                                            if (method.ReturnsVoid)
+                                            {
+                                                sourceWriter.WriteLine(
+                                                    $"{method.BuildInvokeString(variableName)};");
+                                                sourceWriter.WriteLine(
+                                                    $"{variableName}.To{baseStructDef.Name}(ref this);");
+                                                sourceWriter.WriteLine("break;");
+                                            }
+                                            else
+                                            {
+                                                sourceWriter.WriteLine(
+                                                    $"var r = {method.BuildInvokeString(variableName)};");
+                                                sourceWriter.WriteLine(
+                                                    $"{variableName}.To{baseStructDef.Name}(ref this);");
+                                                sourceWriter.WriteLine("return r;");
+                                            }
+                                        }
+                                    }
+
+                                    using (sourceWriter.WithNamedScope("default:"))
+                                    {
+                                        sourceWriter.WriteLine($"{(method.ReturnsVoid ? "break;" : "return default;")}");
+                                    }
+                                }
                             }
                         }
                     }

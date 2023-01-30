@@ -104,7 +104,7 @@ namespace Core.SourceGen
                 if (!string.IsNullOrEmpty(namedScopeLine))
                 {
                     writer.indentLevel--;
-                    writer.WriteLine("}\n");
+                    writer.WriteLine("}");
                 }
             }
         }
@@ -123,8 +123,7 @@ namespace Core.SourceGen
         public IDisposable WithMethodScope(IMethodSymbol method)
         {
             var returnType = method.ReturnsVoid ? "void" : method.ReturnType.ToDisplayString();
-            var parameters = string.Join(", ",
-                method.Parameters.Select(p => $"{p.RefKind.RefKindToSourceString()}{p.Type} {p.Name}"));
+            var parameters = method.BuildParameterListForDeclaration();
             var line = $"public {returnType} {method.Name}({parameters})";
             return new NamedScope(this, line);
         }

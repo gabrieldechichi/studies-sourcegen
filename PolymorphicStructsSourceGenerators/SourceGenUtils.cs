@@ -132,6 +132,22 @@ namespace Core.SourceGen
             return !(it is IMethodSymbol methodSymbol) || methodSymbol.MethodKind != MethodKind.PropertyGet &&
                 methodSymbol.MethodKind != MethodKind.PropertySet;
         }
+
+        public static string BuildInvokeString(this IMethodSymbol method, string objName)
+        {
+            return $"{objName}.{method.Name}({method.BuildParameterListForInvocation()})";
+        }
+        
+        public static string BuildParameterListForInvocation(this IMethodSymbol method)
+        {
+            return string.Join(", ",
+                method.Parameters.Select(p => $"{p.RefKind.RefKindToSourceString()}{p.Name}"));
+        }
+        public static string BuildParameterListForDeclaration(this IMethodSymbol method)
+        {
+            return string.Join(", ",
+                method.Parameters.Select(p => $"{p.RefKind.RefKindToSourceString()}{p.Type} {p.Name}"));
+        }
         
         public static string RefKindToSourceString(this RefKind argRefKind)
         {

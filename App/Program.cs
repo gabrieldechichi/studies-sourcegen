@@ -11,6 +11,7 @@ namespace ConsoleApp
     public interface IMyTestInterface
     {
         public void Foo();
+        public int FooWithRetVal();
     }
     
     public partial struct MyStructA : IMyTestInterface
@@ -21,6 +22,11 @@ namespace ConsoleApp
         {
             Console.WriteLine("FOO from MyStructA");
         }
+
+        public int FooWithRetVal()
+        {
+            return 2;
+        }
     }
     public partial struct MyStructB : IMyTestInterface
     {
@@ -29,6 +35,11 @@ namespace ConsoleApp
         public void Foo()
         {
             Console.WriteLine("FOO from MyStructB");
+        }
+
+        public int FooWithRetVal()
+        {
+            return 3;
         }
     }
     
