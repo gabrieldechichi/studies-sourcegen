@@ -1,5 +1,5 @@
 ﻿/*
-*** GENERATED CODE: ANY EDIT WILL BE LOST ***
+*** GENERATED CODE: ANY EDITS WILL BE LOST ***
 */
 
 using System.Diagnostics;

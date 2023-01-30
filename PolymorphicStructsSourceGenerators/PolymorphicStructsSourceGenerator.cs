@@ -313,6 +313,10 @@ namespace PolymorphicStructs
 
                                     using (sourceWriter.WithNamedScope("default:"))
                                     {
+                                        foreach (var p in method.Parameters.Where(p => p.RefKind == RefKind.Out))
+                                        {
+                                            sourceWriter.WriteLine($"{p.Name} = default;");
+                                        }
                                         sourceWriter.WriteLine($"{(method.ReturnsVoid ? "break;" : "return default;")}");
                                     }
                                 }

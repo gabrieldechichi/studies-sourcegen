@@ -2,6 +2,7 @@
 *** GENERATED CODE: ANY EDITS WILL BE LOST ***
 */
 
+using NUnit.Framework.Interfaces;
 using System;
 using PolymorphicStructsTests;
 namespace PolymorphicStructsTests
