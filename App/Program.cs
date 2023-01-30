@@ -2,26 +2,32 @@
 
 namespace ConsoleApp
 {
-    public class GenerateMethodAtribute : Attribute
+    public class PolymorphicStruct : Attribute
     {
         
     }
-
-    [GenerateMethodAtribute]
-    public partial class MyClass
+    
+    [PolymorphicStruct]
+    public interface IMyTestInterface
     {
-        
+        public void Foo();
     }
+    
+    public struct MyStruct : IMyTestInterface
+    {
+        public void Foo()
+        {
+            Console.WriteLine("FOO from MyStruct");
+        }
+    }
+    
+    public struct StructWithNoInterface{}
     
     partial class Program
     {
         static void Main(string[] args)
         {
-            HelloFrom("Generated Code");
-
-            var c = new MyClass();
-            c.MyGeneratedMethod();
-            Console.WriteLine("Test");
+            var t = new MyTestInterface();
         }
 
         // static partial void HelloFrom(string name);
