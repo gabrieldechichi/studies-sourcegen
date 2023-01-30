@@ -38,7 +38,7 @@ namespace PolymorphicStructsTests
 				}
 				default:
 				{
-					return default;
+					throw new System.ArgumentOutOfRangeException($"Unexpected type id {CurrentTypeId} for merged struct CorrectImplementationInterface");
 				}
 			}
 		}

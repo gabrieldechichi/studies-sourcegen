@@ -132,7 +132,8 @@ namespace PolymorphicStructs
                     }
 
                     //To merged struct
-                    using (sourceWriter.WithNamedScope($"public {mergedStructDef.Name} {structImplDef.ToMergedMethodName}()"))
+                    using (sourceWriter.WithNamedScope(
+                               $"public {mergedStructDef.Name} {structImplDef.ToMergedMethodName}()"))
                     {
                         sourceWriter.WriteLine($"var s = new {mergedStructDef.Name}();");
                         sourceWriter.WriteLine($"{structImplDef.ToMergedMethodName}(ref s);");
@@ -254,7 +255,8 @@ namespace PolymorphicStructs
             {
                 //merged struct definition
                 sourceWriter.WriteLine("[Serializable]");
-                using (sourceWriter.WithNamedScope($"public struct {mergedStructDef.Name} : {mergedStructDef.InterfaceName}"))
+                using (sourceWriter.WithNamedScope(
+                           $"public struct {mergedStructDef.Name} : {mergedStructDef.InterfaceName}"))
                 {
                     //Type enum definition
                     using (sourceWriter.WithNamedScope($"public enum {PolymorphicStructsConstants.TypeEnumName}"))
@@ -313,11 +315,8 @@ namespace PolymorphicStructs
 
                                     using (sourceWriter.WithNamedScope("default:"))
                                     {
-                                        foreach (var p in method.Parameters.Where(p => p.RefKind == RefKind.Out))
-                                        {
-                                            sourceWriter.WriteLine($"{p.Name} = default;");
-                                        }
-                                        sourceWriter.WriteLine($"{(method.ReturnsVoid ? "break;" : "return default;")}");
+                                        sourceWriter.WriteLine(
+                                            $"throw new System.ArgumentOutOfRangeException($\"Unexpected type id {{{PolymorphicStructsConstants.TypeEnumFieldName}}} for merged struct {mergedStructDef.Name}\");");
                                     }
                                 }
                             }

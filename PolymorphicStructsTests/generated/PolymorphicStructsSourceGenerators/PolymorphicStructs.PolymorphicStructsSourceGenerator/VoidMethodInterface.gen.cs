@@ -37,7 +37,7 @@ namespace PolymorphicStructsTests
 				}
 				default:
 				{
-					break;
+					throw new System.ArgumentOutOfRangeException($"Unexpected type id {CurrentTypeId} for merged struct VoidMethodInterface");
 				}
 			}
 		}

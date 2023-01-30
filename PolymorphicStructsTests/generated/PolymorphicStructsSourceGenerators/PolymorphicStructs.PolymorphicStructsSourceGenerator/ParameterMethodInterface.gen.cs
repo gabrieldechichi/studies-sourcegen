@@ -36,8 +36,7 @@ namespace PolymorphicStructsTests
 				}
 				default:
 				{
-					c = default;
-					break;
+					throw new System.ArgumentOutOfRangeException($"Unexpected type id {CurrentTypeId} for merged struct ParameterMethodInterface");
 				}
 			}
 		}
