@@ -13,11 +13,22 @@ namespace ConsoleApp
         public void Foo();
     }
     
-    public struct MyStruct : IMyTestInterface
+    public partial struct MyStructA : IMyTestInterface
     {
+        public int Field1;
+        public int Field2;
         public void Foo()
         {
-            Console.WriteLine("FOO from MyStruct");
+            Console.WriteLine("FOO from MyStructA");
+        }
+    }
+    public partial struct MyStructB : IMyTestInterface
+    {
+        public int Field;
+        public bool OtherField;
+        public void Foo()
+        {
+            Console.WriteLine("FOO from MyStructB");
         }
     }
     

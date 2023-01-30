@@ -117,17 +117,23 @@ namespace Core.SourceGen
             return nameSpace;
         }
 
-        public static List<ISymbol> GetAllMemberSymbols(GeneratorExecutionContext context,
-            InterfaceDeclarationSyntax polymorphicInterface)
+        public static IEnumerable<ISymbol> GetAllMethods(this InterfaceDeclarationSyntax polymorphicInterface,
+            GeneratorExecutionContext context)
         {
             var semanticModel = context.Compilation.GetSemanticModel(polymorphicInterface.SyntaxTree);
             var interfaceSymbol = semanticModel.GetDeclaredSymbol(polymorphicInterface, context.CancellationToken);
 
             return interfaceSymbol?.GetMembers().Concat(interfaceSymbol
-                    ?.AllInterfaces
+                    .AllInterfaces
                     .SelectMany(it => it.GetMembers()))
-                .Where(IsNotAPropertyMethod)
-                .ToList();
+                .Where(m => m.Kind == SymbolKind.Method);
+        }
+
+        public static IEnumerable<IFieldSymbol> GetAllFields(this BaseTypeDeclarationSyntax type, GeneratorExecutionContext context)
+        {
+            var semanticModel = context.Compilation.GetSemanticModel(type.SyntaxTree);
+            var typeSymbol = semanticModel.GetDeclaredSymbol(type, context.CancellationToken);
+            return typeSymbol?.GetMembers().Where(m => m.Kind == SymbolKind.Field).Cast<IFieldSymbol>();
         }
 
         private static bool IsNotAPropertyMethod(ISymbol it)
