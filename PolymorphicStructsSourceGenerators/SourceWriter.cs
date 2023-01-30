@@ -1,10 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using Microsoft.CodeAnalysis;
 
 namespace Core.SourceGen
 {
-    
+    public enum MemberProtectionLevel
+    {
+        Internal,
+        Public,
+        Private,
+        Protected,
+    }
+
     public class SourceWriter
     {
         public StringBuilder StringBuilder = new StringBuilder();
@@ -33,11 +42,28 @@ namespace Core.SourceGen
             return new Scope(this);
         }
 
-        public NamespaceScope WithNamespace(string namespaceName)
+        public NamedScope WithNamespace(string namespaceName)
         {
-            return new NamespaceScope(this, namespaceName);
+            if (!string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(namespaceName))
+            {
+                return new NamedScope(this, $"namespace {namespaceName}");
+            }
+            else
+            {
+                return new NamedScope(this, "");
+            }
         }
-        
+
+        public void WriteField(MemberProtectionLevel protectionLevel, string fieldType, string fieldName)
+        {
+            WriteLine($"{protectionLevel.ToString().ToLower()} {fieldType} {fieldName};");
+        }
+
+        public NamedScope WithNamedScope(string namedScopeLine)
+        {
+            return new NamedScope(this, namedScopeLine);
+        }
+
         public struct Scope : IDisposable
         {
             public SourceWriter writer;
@@ -48,6 +74,7 @@ namespace Core.SourceGen
                 writer.WriteLine("{");
                 writer.indentLevel++;
             }
+
             public void Dispose()
             {
                 writer.indentLevel--;
@@ -55,28 +82,29 @@ namespace Core.SourceGen
             }
         }
 
-        public struct NamespaceScope : IDisposable
+        public struct NamedScope : IDisposable
         {
             private SourceWriter writer;
-            private string namespaceName;
+            private string namedScopeLine;
 
-            public NamespaceScope(SourceWriter writer, string namespaceName)
+            public NamedScope(SourceWriter writer, string namedScopeLine)
             {
                 this.writer = writer;
-                this.namespaceName = namespaceName;
-                if (!string.IsNullOrEmpty(namespaceName))
+                this.namedScopeLine = namedScopeLine;
+                if (!string.IsNullOrEmpty(namedScopeLine))
                 {
-                    writer.WriteLine("namespace " + namespaceName);
+                    writer.WriteLine(namedScopeLine);
                     writer.WriteLine("{");
                     writer.indentLevel++;
                 }
             }
+
             public void Dispose()
             {
-                if (!string.IsNullOrEmpty(namespaceName))
+                if (!string.IsNullOrEmpty(namedScopeLine))
                 {
                     writer.indentLevel--;
-                    writer.WriteLine("}");
+                    writer.WriteLine("}\n");
                 }
             }
         }
@@ -90,6 +118,15 @@ namespace Core.SourceGen
                     WriteLine($"using {usingDirective};");
                 }
             }
+        }
+
+        public IDisposable WithMethodScope(IMethodSymbol method)
+        {
+            var returnType = method.ReturnsVoid ? "void" : method.ReturnType.ToDisplayString();
+            var parameters = string.Join(", ",
+                method.Parameters.Select(p => $"{p.RefKind.RefKindToSourceString()}{p.Type} {p.Name}"));
+            var line = $"public {returnType} {method.Name}({parameters})";
+            return new NamedScope(this, line);
         }
     }
 }

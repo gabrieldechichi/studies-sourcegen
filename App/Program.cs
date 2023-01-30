@@ -38,7 +38,7 @@ namespace ConsoleApp
     {
         static void Main(string[] args)
         {
-            var t = new MyTestInterface();
+//            var t = new MyTestInterface();
         }
 
         // static partial void HelloFrom(string name);

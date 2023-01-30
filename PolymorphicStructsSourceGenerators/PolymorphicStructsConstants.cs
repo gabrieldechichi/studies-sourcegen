@@ -1,7 +1,9 @@
 ﻿namespace PolymorphicStructs
 {
-    public static class PolymorphicStructsConstants
+    internal static class PolymorphicStructsConstants
     {
-        public const string PolymorphicStructInterfaceName = "PolymorphicStruct";
+        internal const string PolymorphicStructInterfaceName = "PolymorphicStruct";
+        internal const string TypeEnumName = "TypeId";
+        internal const string TypeEnumFieldName = "CurrentTypeId";
     }
 }

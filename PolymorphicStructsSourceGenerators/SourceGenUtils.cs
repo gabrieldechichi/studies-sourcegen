@@ -117,7 +117,7 @@ namespace Core.SourceGen
             return nameSpace;
         }
 
-        public static IEnumerable<ISymbol> GetAllMethods(this InterfaceDeclarationSyntax polymorphicInterface,
+        public static IEnumerable<IMethodSymbol> GetAllMethods(this InterfaceDeclarationSyntax polymorphicInterface,
             GeneratorExecutionContext context)
         {
             var semanticModel = context.Compilation.GetSemanticModel(polymorphicInterface.SyntaxTree);
@@ -126,7 +126,7 @@ namespace Core.SourceGen
             return interfaceSymbol?.GetMembers().Concat(interfaceSymbol
                     .AllInterfaces
                     .SelectMany(it => it.GetMembers()))
-                .Where(m => m.Kind == SymbolKind.Method);
+                .OfType<IMethodSymbol>();
         }
 
         public static IEnumerable<IFieldSymbol> GetAllFields(this BaseTypeDeclarationSyntax type, GeneratorExecutionContext context)
@@ -140,6 +140,23 @@ namespace Core.SourceGen
         {
             return !(it is IMethodSymbol methodSymbol) || methodSymbol.MethodKind != MethodKind.PropertyGet &&
                 methodSymbol.MethodKind != MethodKind.PropertySet;
+        }
+        
+        public static string RefKindToSourceString(this RefKind argRefKind)
+        {
+            switch(argRefKind)
+            {
+                case RefKind.None:
+                    return "";
+                case RefKind.Ref:
+                    return "ref ";
+                case RefKind.Out:
+                    return "out ";
+                case RefKind.In:
+                    return "in ";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(argRefKind), argRefKind, null);
+            }
         }
     }
 }
