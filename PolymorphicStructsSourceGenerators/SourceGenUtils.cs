@@ -20,15 +20,6 @@ namespace Core.SourceGen
 #endif
         }
 
-        public static void WriteExceptionToDiagnostics(this GeneratorExecutionContext context, Exception e)
-        {
-            var diagnosticDescriptor = new DiagnosticDescriptor("PolymorphicStructsError",
-                "PolymorphicStructsError", $"Generation failed with {e}", "PolymorphicStructsError",
-                DiagnosticSeverity.Error, true);
-            context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, Location.None,
-                DiagnosticSeverity.Error));
-        }
-
         public static bool HasAttribute(this BaseTypeDeclarationSyntax typeSyntax, string attributeName)
         {
             if (typeSyntax.AttributeLists != null)

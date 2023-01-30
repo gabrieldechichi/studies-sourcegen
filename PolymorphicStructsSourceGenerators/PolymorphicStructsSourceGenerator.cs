@@ -72,17 +72,10 @@ namespace PolymorphicStructs
 
         public void Execute(GeneratorExecutionContext context)
         {
-            try
+            var syntaxReceiver = (PolymorphicStructSyntaxReceiver)context.SyntaxReceiver;
+            foreach (var i in syntaxReceiver.PolymorphicStructInterfaces)
             {
-                var syntaxReceiver = (PolymorphicStructSyntaxReceiver)context.SyntaxReceiver;
-                foreach (var i in syntaxReceiver.PolymorphicStructInterfaces)
-                {
-                    GenerateInterfaceCode(context, syntaxReceiver, i);
-                }
-            }
-            catch (Exception e)
-            {
-                context.WriteExceptionToDiagnostics(e);
+                GenerateInterfaceCode(context, syntaxReceiver, i);
             }
         }
 
