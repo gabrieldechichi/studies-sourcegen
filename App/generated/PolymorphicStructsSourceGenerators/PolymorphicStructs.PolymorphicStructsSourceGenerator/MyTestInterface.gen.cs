@@ -1,10 +1,14 @@
-﻿using System.Diagnostics;
+﻿/*
+*** GENERATED CODE: ANY EDIT WILL BE LOST ***
+*/
+
+using System.Diagnostics;
 using System;
 using ConsoleApp;
 namespace ConsoleApp
 {
 	[Serializable]
-	public struct MyTestInterface
+	public struct MyTestInterface : IMyTestInterface
 	{
 		public enum TypeId
 		{

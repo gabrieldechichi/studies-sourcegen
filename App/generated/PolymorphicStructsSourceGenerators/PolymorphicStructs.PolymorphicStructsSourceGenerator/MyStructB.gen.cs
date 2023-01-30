@@ -1,4 +1,8 @@
-﻿namespace ConsoleApp
+﻿/*
+*** GENERATED CODE: ANY EDIT WILL BE LOST ***
+*/
+
+namespace ConsoleApp
 {
 	public partial struct MyStructB
 	{

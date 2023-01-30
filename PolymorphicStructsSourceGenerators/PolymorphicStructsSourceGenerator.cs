@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Core.SourceGen;
 using Microsoft.CodeAnalysis;
@@ -8,10 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace PolymorphicStructs
 {
-    /// <summary>
-    /// Base class implementing an interface
-    /// </summary>
-    internal class BaseStructDef
+    internal class MergedStructDef
     {
         public string Name;
         public string InterfaceName;
@@ -44,14 +40,16 @@ namespace PolymorphicStructs
     {
         public string Name;
         public string Namespace;
-        public List<StructField> Fields;
+
+        public string ToMergedMethodName;
+        public List<StructImplField> Fields;
     }
 
-    internal class StructField
+    internal class StructImplField
     {
         public ITypeSymbol Type;
         public string FieldName;
-        public string BaseStructFieldName;
+        public string MergedStructFieldName;
     }
 
     internal class MergedStructField
@@ -82,8 +80,8 @@ namespace PolymorphicStructs
         private void GenerateInterfaceCode(GeneratorExecutionContext context,
             PolymorphicStructSyntaxReceiver syntaxReceiver, InterfaceDeclarationSyntax interfaceDeclarationSyntax)
         {
-            var baseStructDef = BuildBaseStructForInterface(context, interfaceDeclarationSyntax);
-            var structImplDefs = BuildStructImplDefs(context, syntaxReceiver, baseStructDef);
+            var mergedStruct = BuildMergedStructForInterface(context, interfaceDeclarationSyntax);
+            var structImplDefs = BuildStructImplDefs(context, syntaxReceiver, mergedStruct);
             if (structImplDefs.Count == 0)
             {
                 return;
@@ -91,17 +89,17 @@ namespace PolymorphicStructs
 
             var mergedFields = BuildMergedStructFields(structImplDefs);
 
-            var baseStructSource = GenerateBaseStructSource(baseStructDef, structImplDefs, mergedFields);
-            context.AddSource($"{baseStructDef.Name}.gen.cs", baseStructSource);
+            var mergedStructSource = GenerateMergedStructSource(mergedStruct, structImplDefs, mergedFields);
+            context.AddSource($"{mergedStruct.Name}.gen.cs", mergedStructSource);
 
             foreach (var s in structImplDefs)
             {
-                var implStructSource = GenerateImplStructSource(baseStructDef, s, mergedFields);
+                var implStructSource = GenerateImplStructSource(mergedStruct, s, mergedFields);
                 context.AddSource($"{s.Name}.gen.cs", implStructSource);
             }
         }
 
-        private string GenerateImplStructSource(BaseStructDef baseStructDef, StructImplDef structImplDef,
+        private string GenerateImplStructSource(MergedStructDef mergedStructDef, StructImplDef structImplDef,
             List<MergedStructField> mergedFields)
         {
             var sourceWriter = new SourceWriter();
@@ -110,21 +108,20 @@ namespace PolymorphicStructs
                 using (sourceWriter.WithNamedScope($"public partial struct {structImplDef.Name}"))
                 {
                     //From merge struct (constructor)
-                    using (sourceWriter.WithNamedScope($"public {structImplDef.Name}({baseStructDef.Name} s)"))
+                    using (sourceWriter.WithNamedScope($"public {structImplDef.Name}({mergedStructDef.Name} s)"))
                     {
                         foreach (var f in structImplDef.Fields)
                         {
-                            sourceWriter.WriteLine($"{f.FieldName} = s.{f.BaseStructFieldName};");
+                            sourceWriter.WriteLine($"{f.FieldName} = s.{f.MergedStructFieldName};");
                         }
                     }
 
-                    //To base struct (by ref)
-                    var toMergedStructMethodName = $"To{baseStructDef.Name}";
+                    //To merged struct struct (by ref)
                     using (sourceWriter.WithNamedScope(
-                               $"public void {toMergedStructMethodName}(ref {baseStructDef.Name} s)"))
+                               $"public void {structImplDef.ToMergedMethodName}(ref {mergedStructDef.Name} s)"))
                     {
                         sourceWriter.WriteLine(
-                            $"s.{PolymorphicStructsConstants.TypeEnumFieldName} = {baseStructDef.Name}.{PolymorphicStructsConstants.TypeEnumName}.{structImplDef.Name};");
+                            $"s.{PolymorphicStructsConstants.TypeEnumFieldName} = {mergedStructDef.Name}.{PolymorphicStructsConstants.TypeEnumName}.{structImplDef.Name};");
                         foreach (var mergedField in mergedFields)
                         {
                             if (mergedField.StructToFieldName.TryGetValue(structImplDef, out var fieldNameInStruct))
@@ -134,11 +131,11 @@ namespace PolymorphicStructs
                         }
                     }
 
-                    //To Base struct
-                    using (sourceWriter.WithNamedScope($"public {baseStructDef.Name} To{baseStructDef.Name}()"))
+                    //To merged struct
+                    using (sourceWriter.WithNamedScope($"public {mergedStructDef.Name} {structImplDef.ToMergedMethodName}()"))
                     {
-                        sourceWriter.WriteLine($"var s = new {baseStructDef.Name}();");
-                        sourceWriter.WriteLine($"{toMergedStructMethodName}(ref s);");
+                        sourceWriter.WriteLine($"var s = new {mergedStructDef.Name}();");
+                        sourceWriter.WriteLine($"{structImplDef.ToMergedMethodName}(ref s);");
                         sourceWriter.WriteLine("return s;");
                     }
                 }
@@ -148,10 +145,10 @@ namespace PolymorphicStructs
         }
 
 
-        private BaseStructDef BuildBaseStructForInterface(GeneratorExecutionContext context,
+        private MergedStructDef BuildMergedStructForInterface(GeneratorExecutionContext context,
             InterfaceDeclarationSyntax interfaceDeclarationSyntax)
         {
-            var baseStructDef = new BaseStructDef
+            var mergedStruct = new MergedStructDef
             {
                 Name = interfaceDeclarationSyntax.Identifier.Text.TrimStart('I'),
                 InterfaceName = interfaceDeclarationSyntax.Identifier.Text,
@@ -159,33 +156,34 @@ namespace PolymorphicStructs
                 InterfaceMethods = interfaceDeclarationSyntax.GetAllMethods(context).ToList()
             };
 
-            baseStructDef.UsingDirectives = interfaceDeclarationSyntax.SyntaxTree
+            mergedStruct.UsingDirectives = interfaceDeclarationSyntax.SyntaxTree
                 .GetCompilationUnitRoot(context.CancellationToken).Usings
                 .Select(u => u.Name.ToString()).ToList();
 
-            baseStructDef.TryAddUniqueUsing("System");
-            baseStructDef.TryAddUniqueUsing(baseStructDef.Namespace);
+            mergedStruct.TryAddUniqueUsing("System");
+            mergedStruct.TryAddUniqueUsing(mergedStruct.Namespace);
 
-            return baseStructDef;
+            return mergedStruct;
         }
 
         private List<StructImplDef> BuildStructImplDefs(GeneratorExecutionContext context,
-            PolymorphicStructSyntaxReceiver syntaxReceiver, BaseStructDef baseStructDef)
+            PolymorphicStructSyntaxReceiver syntaxReceiver, MergedStructDef mergedStructDef)
         {
             var retVal = new List<StructImplDef>();
             var structsImplementingInterface =
                 syntaxReceiver.AllStructsImplementingInterfaces.Where(s =>
-                    s.ImplementsInterface(baseStructDef.InterfaceName) &&
-                    !s.Identifier.Text.Equals(baseStructDef.Name));
+                    s.ImplementsInterface(mergedStructDef.InterfaceName) &&
+                    !s.Identifier.Text.Equals(mergedStructDef.Name));
             foreach (var s in structsImplementingInterface)
             {
-                baseStructDef.TryAddManyUniqueUsings(s.SyntaxTree.GetCompilationUnitRoot(context.CancellationToken)
+                mergedStructDef.TryAddManyUniqueUsings(s.SyntaxTree.GetCompilationUnitRoot(context.CancellationToken)
                     .Usings);
                 var structImpl = new StructImplDef
                 {
                     Name = s.Identifier.ToString(),
                     Namespace = s.GetNamespace(),
-                    Fields = s.GetAllFields(context).Select(f => new StructField
+                    ToMergedMethodName = $"To{mergedStructDef.Name}",
+                    Fields = s.GetAllFields(context).Select(f => new StructImplField
                     {
                         Type = f.Type,
                         FieldName = f.Name
@@ -203,7 +201,7 @@ namespace PolymorphicStructs
             var mergedFields = new List<MergedStructField>();
             var usedIndexesInMergedFields = new List<int>();
 
-            int FindOrCreateMergedField(StructField field)
+            int FindOrCreateMergedField(StructImplField field)
             {
                 var matchingFieldIndex = -1;
                 for (var i = 0; i < mergedFields.Count; i++)
@@ -239,7 +237,7 @@ namespace PolymorphicStructs
                     var mergedFieldIndex = FindOrCreateMergedField(field);
                     var mergedField = mergedFields[mergedFieldIndex];
                     mergedField.StructToFieldName.Add(structImpl, field.FieldName);
-                    field.BaseStructFieldName = mergedField.FieldName;
+                    field.MergedStructFieldName = mergedField.FieldName;
                     usedIndexesInMergedFields.Add(mergedFieldIndex);
                 }
             }
@@ -247,16 +245,16 @@ namespace PolymorphicStructs
             return mergedFields;
         }
 
-        private string GenerateBaseStructSource(BaseStructDef baseStructDef, List<StructImplDef> structs,
+        private string GenerateMergedStructSource(MergedStructDef mergedStructDef, List<StructImplDef> structs,
             List<MergedStructField> mergedFields)
         {
             var sourceWriter = new SourceWriter();
-            sourceWriter.WriteUsings(baseStructDef.UsingDirectives);
-            using (sourceWriter.WithNamespace(baseStructDef.Namespace))
+            sourceWriter.WriteUsings(mergedStructDef.UsingDirectives);
+            using (sourceWriter.WithNamespace(mergedStructDef.Namespace))
             {
-                //Base struct definition
+                //merged struct definition
                 sourceWriter.WriteLine("[Serializable]");
-                using (sourceWriter.WithNamedScope($"public struct {baseStructDef.Name}"))
+                using (sourceWriter.WithNamedScope($"public struct {mergedStructDef.Name} : {mergedStructDef.InterfaceName}"))
                 {
                     //Type enum definition
                     using (sourceWriter.WithNamedScope($"public enum {PolymorphicStructsConstants.TypeEnumName}"))
@@ -279,7 +277,7 @@ namespace PolymorphicStructs
 
                     //methods
                     {
-                        foreach (var method in baseStructDef.InterfaceMethods)
+                        foreach (var method in mergedStructDef.InterfaceMethods)
                         {
                             using (sourceWriter.WithMethodScope(method))
                             {
@@ -299,7 +297,7 @@ namespace PolymorphicStructs
                                                 sourceWriter.WriteLine(
                                                     $"{method.BuildInvokeString(variableName)};");
                                                 sourceWriter.WriteLine(
-                                                    $"{variableName}.To{baseStructDef.Name}(ref this);");
+                                                    $"{variableName}.{s.ToMergedMethodName}(ref this);");
                                                 sourceWriter.WriteLine("break;");
                                             }
                                             else
@@ -307,7 +305,7 @@ namespace PolymorphicStructs
                                                 sourceWriter.WriteLine(
                                                     $"var r = {method.BuildInvokeString(variableName)};");
                                                 sourceWriter.WriteLine(
-                                                    $"{variableName}.To{baseStructDef.Name}(ref this);");
+                                                    $"{variableName}.{s.ToMergedMethodName}(ref this);");
                                                 sourceWriter.WriteLine("return r;");
                                             }
                                         }

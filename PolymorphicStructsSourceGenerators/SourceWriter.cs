@@ -16,8 +16,17 @@ namespace Core.SourceGen
 
     public class SourceWriter
     {
-        public StringBuilder StringBuilder = new StringBuilder();
+        public StringBuilder StringBuilder;
         private int indentLevel = 0;
+
+        public SourceWriter()
+        {
+            StringBuilder = new StringBuilder();
+            WriteLine(@"/*
+*** GENERATED CODE: ANY EDITS WILL BE LOST ***
+*/
+");
+        }
 
         public void WriteLine(string line)
         {

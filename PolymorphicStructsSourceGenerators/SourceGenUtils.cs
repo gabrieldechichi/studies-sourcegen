@@ -55,16 +55,6 @@ namespace Core.SourceGen
             return false;
         }
 
-        public static bool ImplementsAnyInterface(this BaseTypeDeclarationSyntax typeSymbol)
-        {
-            if (typeSymbol.BaseList.Types.Any(t => t.Type is InterfaceDeclarationSyntax))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         public static IEnumerable<MethodDeclarationSyntax> GetAllMethodsOf(TypeDeclarationSyntax t)
         {
             IEnumerable<MethodDeclarationSyntax> methods = t.Members
