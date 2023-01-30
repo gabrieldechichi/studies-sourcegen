@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGen", "SourceGen\Sour
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolymorphicStructsSourceGenerators", "PolymorphicStructsSourceGenerators\PolymorphicStructsSourceGenerators.csproj", "{E9F285C8-145D-4D52-A12B-8213A49D5910}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolymorphicStructsTests", "PolymorphicStructsTests\PolymorphicStructsTests.csproj", "{DD600620-9819-49B4-8F4C-10F0963749BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{E9F285C8-145D-4D52-A12B-8213A49D5910}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9F285C8-145D-4D52-A12B-8213A49D5910}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9F285C8-145D-4D52-A12B-8213A49D5910}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD600620-9819-49B4-8F4C-10F0963749BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD600620-9819-49B4-8F4C-10F0963749BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD600620-9819-49B4-8F4C-10F0963749BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD600620-9819-49B4-8F4C-10F0963749BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
