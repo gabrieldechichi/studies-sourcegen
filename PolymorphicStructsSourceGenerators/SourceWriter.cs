@@ -8,15 +8,35 @@ namespace Core.SourceGen
     public class SourceWriter
     {
         public StringBuilder StringBuilder;
-        private int indentLevel = 0;
+        private int indentLevel;
+        private readonly string lineEnding;
+        private string indent;
+
+        private int IndentLevel
+        {
+            get => indentLevel;
+            set
+            {
+                if (indentLevel != value)
+                {
+                    indentLevel = value;
+                    indent = "";
+                    for (var i = 0; i < IndentLevel; i++)
+                    {
+                        indent += "\t";
+                    }
+                }
+            }
+        }
 
         public SourceWriter()
         {
             StringBuilder = new StringBuilder();
             WriteLine(@"/*
 *** GENERATED CODE: ANY EDITS WILL BE LOST ***
-*/
-");
+*/");
+
+            lineEnding = "\r\n";
         }
 
         public void WriteLines(params string[] lines)
@@ -29,26 +49,28 @@ namespace Core.SourceGen
         
         public void WriteLine(string line)
         {
-            StringBuilder.Append(GetIndentString());
+            StringBuilder.Append(indent);
             StringBuilder.Append(line);
-            StringBuilder.Append('\n');
+            StringBuilder.Append(lineEnding);
         }
 
-        private string GetIndentString()
+        public NamedScope WithTypeScope(string typeDeclaration)
         {
-            var indent = "";
-            for (var i = 0; i < indentLevel; i++)
-            {
-                indent += "\t";
-            }
-
-            return indent;
+            WriteLine("");
+            return WithNamedScope(typeDeclaration);
         }
 
+        public NamedScope WithMethodScope(string methodDeclaration)
+        {
+            WriteLine("");
+            return WithNamedScope(methodDeclaration);
+        }
+        
         public NamedScope WithNamespace(string namespaceName)
         {
             if (!string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(namespaceName))
             {
+                WriteLine("");
                 return new NamedScope(this, $"namespace {namespaceName}");
             }
             else
@@ -75,7 +97,7 @@ namespace Core.SourceGen
                 {
                     writer.WriteLine(namedScopeLine);
                     writer.WriteLine("{");
-                    writer.indentLevel++;
+                    writer.IndentLevel++;
                 }
             }
 
@@ -83,7 +105,7 @@ namespace Core.SourceGen
             {
                 if (!string.IsNullOrEmpty(namedScopeLine))
                 {
-                    writer.indentLevel--;
+                    writer.IndentLevel--;
                     writer.WriteLine("}");
                 }
             }
@@ -91,6 +113,7 @@ namespace Core.SourceGen
 
         public void WriteUsings(IEnumerable<string> usingDirectives)
         {
+            WriteLine("");
             foreach (var usingDirective in usingDirectives)
             {
                 if (!string.IsNullOrEmpty(usingDirective) && !string.IsNullOrWhiteSpace(usingDirective))
@@ -102,7 +125,7 @@ namespace Core.SourceGen
 
         public IDisposable WithMethodScope(IMethodSymbol method)
         {
-            return WithNamedScope(
+            return WithMethodScope(
                 $"{method.DeclaredAccessibility.AccessibilityToString()} {method.ReturnType} {method.Name}({method.BuildParameterListForDeclaration()})");
         }
 

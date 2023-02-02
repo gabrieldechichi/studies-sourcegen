@@ -1,21 +1,25 @@
 ﻿/*
 *** GENERATED CODE: ANY EDITS WILL BE LOST ***
 */
-
 using NUnit.Framework.Interfaces;
 using System;
 using PolymorphicStructsTests;
+
 namespace PolymorphicStructsTests
 {
 	[Serializable]
+	
 	public struct ParameterMethodInterface : IParameterMethodInterface
 	{
+		
 		public enum TypeId
 		{
 			ParameterMethodA,
 			ParameterMethodB,
 		}
+		
 		public TypeId CurrentTypeId;
+		
 		public void Foo(ref int a, in bool b, out int c, string s)
 		{
 			switch (CurrentTypeId)

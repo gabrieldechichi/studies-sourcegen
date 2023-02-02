@@ -1,23 +1,27 @@
 ﻿/*
 *** GENERATED CODE: ANY EDITS WILL BE LOST ***
 */
-
 using NUnit.Framework.Interfaces;
 using System;
 using PolymorphicStructsTests;
+
 namespace PolymorphicStructsTests
 {
 	[Serializable]
+	
 	public struct CorrectImplementationInterface : ICorrectImplementationInterface
 	{
+		
 		public enum TypeId
 		{
 			CorrectImplementationA,
 			CorrectImplementationB,
 		}
+		
 		public TypeId CurrentTypeId;
 		public Int32 Int32_0;
 		public Int32 Int32_1;
+		
 		public int Foo()
 		{
 			switch (CurrentTypeId)

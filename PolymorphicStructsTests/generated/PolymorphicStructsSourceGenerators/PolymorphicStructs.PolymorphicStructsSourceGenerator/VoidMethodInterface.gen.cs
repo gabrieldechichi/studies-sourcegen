@@ -1,22 +1,26 @@
 ﻿/*
 *** GENERATED CODE: ANY EDITS WILL BE LOST ***
 */
-
 using NUnit.Framework.Interfaces;
 using System;
 using PolymorphicStructsTests;
+
 namespace PolymorphicStructsTests
 {
 	[Serializable]
+	
 	public struct VoidMethodInterface : IVoidMethodInterface
 	{
+		
 		public enum TypeId
 		{
 			VoidMethodA,
 			VoidMethodB,
 		}
+		
 		public TypeId CurrentTypeId;
 		public Int32 Int32_0;
+		
 		public void Foo()
 		{
 			switch (CurrentTypeId)

@@ -106,10 +106,10 @@ namespace PolymorphicStructs
             var sourceWriter = new SourceWriter();
             using (sourceWriter.WithNamespace(structImplDef.Namespace))
             {
-                using (sourceWriter.WithNamedScope($"public partial struct {structImplDef.Name}"))
+                using (sourceWriter.WithTypeScope($"public partial struct {structImplDef.Name}"))
                 {
                     //From merge struct (constructor)
-                    using (sourceWriter.WithNamedScope($"public {structImplDef.Name}({mergedStructDef.Name} s)"))
+                    using (sourceWriter.WithMethodScope($"public {structImplDef.Name}({mergedStructDef.Name} s)"))
                     {
                         foreach (var f in structImplDef.Fields)
                         {
@@ -118,7 +118,7 @@ namespace PolymorphicStructs
                     }
 
                     //To merged struct struct (by ref)
-                    using (sourceWriter.WithNamedScope(
+                    using (sourceWriter.WithMethodScope(
                                $"public void {structImplDef.ToMergedMethodName}(ref {mergedStructDef.Name} s)"))
                     {
                         sourceWriter.WriteLine(
@@ -133,7 +133,7 @@ namespace PolymorphicStructs
                     }
 
                     //To merged struct
-                    using (sourceWriter.WithNamedScope(
+                    using (sourceWriter.WithMethodScope(
                                $"public {mergedStructDef.Name} {structImplDef.ToMergedMethodName}()"))
                     {
                         sourceWriter.WriteLines(
@@ -257,11 +257,11 @@ namespace PolymorphicStructs
             {
                 //merged struct definition
                 sourceWriter.WriteLine("[Serializable]");
-                using (sourceWriter.WithNamedScope(
+                using (sourceWriter.WithTypeScope(
                            $"public struct {mergedStructDef.Name} : {mergedStructDef.InterfaceName}"))
                 {
                     //Type enum definition
-                    using (sourceWriter.WithNamedScope($"public enum {PolymorphicStructsConstants.TypeEnumName}"))
+                    using (sourceWriter.WithTypeScope($"public enum {PolymorphicStructsConstants.TypeEnumName}"))
                     {
                         foreach (var s in structs)
                         {
@@ -271,6 +271,7 @@ namespace PolymorphicStructs
 
                     //fields
                     {
+                        sourceWriter.WriteLine("");
                         sourceWriter.WriteField("public", TypeEnumName, TypeEnumFieldName);
                         foreach (var f in mergedFields)
                         {
