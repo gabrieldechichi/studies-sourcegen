@@ -4,6 +4,7 @@ using Core.SourceGen;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static PolymorphicStructs.PolymorphicStructsConstants;
 
 namespace PolymorphicStructs
 {
@@ -121,7 +122,7 @@ namespace PolymorphicStructs
                                $"public void {structImplDef.ToMergedMethodName}(ref {mergedStructDef.Name} s)"))
                     {
                         sourceWriter.WriteLine(
-                            $"s.{PolymorphicStructsConstants.TypeEnumFieldName} = {mergedStructDef.Name}.{PolymorphicStructsConstants.TypeEnumName}.{structImplDef.Name};");
+                            $"s.{TypeEnumFieldName} = {mergedStructDef.Name}.{TypeEnumName}.{structImplDef.Name};");
                         foreach (var mergedField in mergedFields)
                         {
                             if (mergedField.StructToFieldName.TryGetValue(structImplDef, out var fieldNameInStruct))
@@ -135,9 +136,10 @@ namespace PolymorphicStructs
                     using (sourceWriter.WithNamedScope(
                                $"public {mergedStructDef.Name} {structImplDef.ToMergedMethodName}()"))
                     {
-                        sourceWriter.WriteLine($"var s = new {mergedStructDef.Name}();");
-                        sourceWriter.WriteLine($"{structImplDef.ToMergedMethodName}(ref s);");
-                        sourceWriter.WriteLine("return s;");
+                        sourceWriter.WriteLines(
+                            $"var s = new {mergedStructDef.Name}();",
+                            $"{structImplDef.ToMergedMethodName}(ref s);",
+                            "return s;");
                     }
                 }
             }
@@ -269,11 +271,10 @@ namespace PolymorphicStructs
 
                     //fields
                     {
-                        sourceWriter.WriteField(MemberProtectionLevel.Public, PolymorphicStructsConstants.TypeEnumName,
-                            PolymorphicStructsConstants.TypeEnumFieldName);
+                        sourceWriter.WriteField("public", TypeEnumName, TypeEnumFieldName);
                         foreach (var f in mergedFields)
                         {
-                            sourceWriter.WriteField(MemberProtectionLevel.Public, f.Type.Name, f.FieldName);
+                            sourceWriter.WriteField("public", f.Type.Name, f.FieldName);
                         }
                     }
 
@@ -284,31 +285,32 @@ namespace PolymorphicStructs
                             using (sourceWriter.WithMethodScope(method))
                             {
                                 using (sourceWriter.WithNamedScope(
-                                           $"switch ({PolymorphicStructsConstants.TypeEnumFieldName})"))
+                                           $"switch ({TypeEnumFieldName})"))
                                 {
                                     foreach (var s in structs)
                                     {
                                         using (sourceWriter.WithNamedScope(
-                                                   $"case {PolymorphicStructsConstants.TypeEnumName}.{s.Name}:"))
+                                                   $"case {TypeEnumName}.{s.Name}:"))
                                         {
                                             var variableName = $"instance_{s.Name}";
+
                                             sourceWriter.WriteLine($"var {variableName} = new {s.Name}(this);");
 
                                             if (method.ReturnsVoid)
                                             {
-                                                sourceWriter.WriteLine(
-                                                    $"{method.BuildInvokeString(variableName)};");
-                                                sourceWriter.WriteLine(
-                                                    $"{variableName}.{s.ToMergedMethodName}(ref this);");
-                                                sourceWriter.WriteLine("break;");
+                                                sourceWriter.WriteLines(
+                                                    $"{variableName}.{method.Name}({method.BuildParameterListForInvocation()});",
+                                                    $"{variableName}.{s.ToMergedMethodName}(ref this);",
+                                                    "break;"
+                                                );
                                             }
                                             else
                                             {
-                                                sourceWriter.WriteLine(
-                                                    $"var r = {method.BuildInvokeString(variableName)};");
-                                                sourceWriter.WriteLine(
-                                                    $"{variableName}.{s.ToMergedMethodName}(ref this);");
-                                                sourceWriter.WriteLine("return r;");
+                                                sourceWriter.WriteLines(
+                                                    $"var r = {variableName}.{method.Name}({method.BuildParameterListForInvocation()});",
+                                                    $"{variableName}.{s.ToMergedMethodName}(ref this);",
+                                                    "return r;"
+                                                );
                                             }
                                         }
                                     }

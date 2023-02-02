@@ -110,7 +110,8 @@ namespace Core.SourceGen
                 .OfType<IMethodSymbol>();
         }
 
-        public static IEnumerable<IFieldSymbol> GetAllFields(this BaseTypeDeclarationSyntax type, GeneratorExecutionContext context)
+        public static IEnumerable<IFieldSymbol> GetAllFields(this BaseTypeDeclarationSyntax type,
+            GeneratorExecutionContext context)
         {
             var semanticModel = context.Compilation.GetSemanticModel(type.SyntaxTree);
             var typeSymbol = semanticModel.GetDeclaredSymbol(type, context.CancellationToken);
@@ -127,21 +128,22 @@ namespace Core.SourceGen
         {
             return $"{objName}.{method.Name}({method.BuildParameterListForInvocation()})";
         }
-        
+
         public static string BuildParameterListForInvocation(this IMethodSymbol method)
         {
             return string.Join(", ",
                 method.Parameters.Select(p => $"{p.RefKind.RefKindToSourceString()}{p.Name}"));
         }
+
         public static string BuildParameterListForDeclaration(this IMethodSymbol method)
         {
             return string.Join(", ",
                 method.Parameters.Select(p => $"{p.RefKind.RefKindToSourceString()}{p.Type} {p.Name}"));
         }
-        
+
         public static string RefKindToSourceString(this RefKind argRefKind)
         {
-            switch(argRefKind)
+            switch (argRefKind)
             {
                 case RefKind.None:
                     return "";
@@ -153,6 +155,26 @@ namespace Core.SourceGen
                     return "in ";
                 default:
                     throw new ArgumentOutOfRangeException(nameof(argRefKind), argRefKind, null);
+            }
+        }
+
+        public static string AccessibilityToString(this Accessibility accessibility)
+        {
+            switch (accessibility)
+            {
+                case Accessibility.NotApplicable:
+                case Accessibility.Internal:
+                    return "internal";
+                case Accessibility.Private:
+                    return "private";
+                case Accessibility.ProtectedAndInternal:
+                case Accessibility.Protected:
+                case Accessibility.ProtectedOrInternal:
+                    return "protected";
+                case Accessibility.Public:
+                    return "public";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(accessibility), accessibility, null);
             }
         }
     }

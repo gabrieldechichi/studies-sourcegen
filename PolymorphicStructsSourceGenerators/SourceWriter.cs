@@ -1,19 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
 namespace Core.SourceGen
 {
-    public enum MemberProtectionLevel
-    {
-        Internal,
-        Public,
-        Private,
-        Protected,
-    }
-
     public class SourceWriter
     {
         public StringBuilder StringBuilder;
@@ -28,6 +19,14 @@ namespace Core.SourceGen
 ");
         }
 
+        public void WriteLines(params string[] lines)
+        {
+            foreach (var l in lines)
+            {
+                WriteLine(l);
+            }
+        }
+        
         public void WriteLine(string line)
         {
             StringBuilder.Append(GetIndentString());
@@ -46,11 +45,6 @@ namespace Core.SourceGen
             return indent;
         }
 
-        public Scope WithScope()
-        {
-            return new Scope(this);
-        }
-
         public NamedScope WithNamespace(string namespaceName)
         {
             if (!string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(namespaceName))
@@ -63,32 +57,9 @@ namespace Core.SourceGen
             }
         }
 
-        public void WriteField(MemberProtectionLevel protectionLevel, string fieldType, string fieldName)
-        {
-            WriteLine($"{protectionLevel.ToString().ToLower()} {fieldType} {fieldName};");
-        }
-
         public NamedScope WithNamedScope(string namedScopeLine)
         {
             return new NamedScope(this, namedScopeLine);
-        }
-
-        public struct Scope : IDisposable
-        {
-            public SourceWriter writer;
-
-            public Scope(SourceWriter w)
-            {
-                writer = w;
-                writer.WriteLine("{");
-                writer.indentLevel++;
-            }
-
-            public void Dispose()
-            {
-                writer.indentLevel--;
-                writer.WriteLine("}");
-            }
         }
 
         public struct NamedScope : IDisposable
@@ -131,10 +102,13 @@ namespace Core.SourceGen
 
         public IDisposable WithMethodScope(IMethodSymbol method)
         {
-            var returnType = method.ReturnsVoid ? "void" : method.ReturnType.ToDisplayString();
-            var parameters = method.BuildParameterListForDeclaration();
-            var line = $"public {returnType} {method.Name}({parameters})";
-            return new NamedScope(this, line);
+            return WithNamedScope(
+                $"{method.DeclaredAccessibility.AccessibilityToString()} {method.ReturnType} {method.Name}({method.BuildParameterListForDeclaration()})");
+        }
+
+        public void WriteField(string accessibility, string fieldType, string fieldName)
+        {
+            WriteLine($"{accessibility} {fieldType} {fieldName};");
         }
     }
 }
