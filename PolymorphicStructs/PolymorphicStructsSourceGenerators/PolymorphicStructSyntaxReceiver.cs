@@ -1,9 +1,7 @@
 using System.Collections.Generic;
-using System.Text;
 using Core.SourceGen;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 namespace PolymorphicStructs
 {
